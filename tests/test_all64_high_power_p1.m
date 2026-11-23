@@ -7,7 +7,8 @@ end
 
 function testConstructedSequence(t)
 root = fileparts(fileparts(mfilename('fullpath')));
-scriptPath = fullfile(root, 'verasonics', 'curing_mode', 'SetUpP9_4TSICE_All64_HighPower_P1.m');
+scriptDir = fullfile(root, 'verasonics', 'curing_mode');
+scriptPath = fullfile(scriptDir, 'SetUpP9_4TSICE_All64_HighPower_P1.m');
 verifyTrue(t, isfile(scriptPath));
 
 tmpDir = tempname;
@@ -18,12 +19,15 @@ oldPath = path;
 cleanupEnv = onCleanup(@() restoreEnv(oldDir, oldPath, tmpDir)); %#ok<NASGU>
 
 addpath( ...
+    scriptDir, ...
+    fullfile(root, 'VantageNXT-2.3.2-p2'), ...
     fullfile(root, 'VantageNXT-2.3.2-p2', 'Utilities'), ...
     fullfile(root, 'VantageNXT-2.3.2-p2', 'System'), ...
-    fullfile(root, 'VantageNXT-2.3.2-p2', 'System', 'P_Files'));
+    fullfile(root, 'VantageNXT-2.3.2-p2', 'System', 'P_Files'), ...
+    fullfile(root, 'VantageNXT-2.3.2-p2', 'vstoolbox'));
 cd(tmpDir);
 
-evalin('base', sprintf('run(''%s'')', strrep(scriptPath, '''', '''''')));
+evalin('base', 'SetUpP9_4TSICE_All64_HighPower_P1;');
 
 matPath = fullfile(tmpDir, 'MatFiles', 'SetUpP9_4TSICE_All64_HighPower_P1.mat');
 verifyTrue(t, isfile(matPath));
@@ -47,11 +51,13 @@ verifyEqual(t, s.TW.type, 'parametric');
 verifyEqual(t, s.TW.Parameters, [6, 1.0, 40, 1]);
 verifyLessThan(t, s.TW.Parameters(3), 50);
 
-if exist('computeTWWaveform', 'file')
+if exist('computeTWWaveform', 'file') && exist('com.vsv.hal.Vantage', 'class') == 8
     [~, ~, ~, rc, twOut] = computeTWWaveform(s.TW);
     verifyEqual(t, rc, 0);
     verifyEqual(t, twOut.sysExtendBL, 0);
     verifyGreaterThanOrEqual(t, twOut.fluxHVlimit, 35);
+else
+    fprintf('[test_all64_high_power_p1] Skipped computeTWWaveform: Vantage NXT Java HAL (com.vsv.hal.Vantage) is not activated in this MATLAB session.\n');
 end
 
 verifyEqual(t, s.TX.Apod, ones(1, 64));

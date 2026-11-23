@@ -137,7 +137,8 @@
 - **已核对**：
   - 厂商基线四文件 SHA-256 与 `results/curing_only_2026-11-03/vendor_hashes_before.json` 完全一致，`VantageNXT-2.3.2-p2/` 未被修改；
   - 读取 `systemInfo.txt`、四份核心随包文档及相关 `HelpText` PDF，核对 `SetUpP9_4TSICE_FlashAngles.m`、`computeTrans.m`、`computeTXDelays.m`、`computeRegions.m`、`computeTGCWaveform.m`、`SetUpHIFUsystem.m`、`SetUpL7_4PushTest.m`；
-  - 对新增脚本执行结构与语法审计（括号配对、参数范围、`simulateMode = 1`、`txCycles < 25`、无 `VSX`/`transferToHost`/`jump` 自动调用）。
+  - 对新增驱动与测试脚本执行结构、定界符与语法审计（括号配对差值全为 `0`、`simulateMode = 1`、`txCycles = 20 < 25`、无未注释 `VSX`/`transferToHost`/`jump`）；
+  - 在修复 [test_all64_high_power_p1.m](../../tests/test_all64_high_power_p1.m) 的测试入口后（改用 `addpath` 保持在临时 `tmpDir` 运行 `SetUpP9_4TSICE_All64_HighPower_P1;` 以生成 `MatFiles/*.mat`，并将 `computeTWWaveform` 校验以 `exist('com.vsv.hal.Vantage', 'class') == 8` 为门控），用户在本机已打开的未 `activate` MATLAB 图形会话中执行 `results = runtests('tests/test_all64_high_power_p1.m'); assertSuccess(results);` 并确认运行通过（覆盖脚本完整构建、`.mat` 保存/加载及全部序列/参数/延时/`Event`/`SeqControl` 断言）。
 - **未执行（不得宣称通过）**：
-  - **MATLAB 单元测试与静态检查（`tests/test_all64_high_power_p1.m`）未在本机成功运行**：本机调用 `E:\MATLAB\bin\matlab.exe` 在启动阶段触发 MathWorks 许可错误 `5201`（`无法与 MathWorks 服务通信`），未获得 MATLAB 运行结果；须在联网或已激活的 MATLAB 图形会话 / 目标实验机上单独运行验证；
-  - **未运行 VSX、hardware/Simulator 加载与实物发射**：无真实负载电压、声压、温升或固化验证结论。
+  - **`computeTWWaveform` 波形校验在未 `activate` 会话中被显式跳过**：由于 Vantage NXT Java HAL（`com.vsv.hal.Vantage`）仅在执行 Vantage NXT `activate` 后加载，本轮未运行 `computeTWWaveform` 对 `rc == 0`、`sysExtendBL == 0` 与 `fluxHVlimit >= 35` 的校验，须在已 `activate` 的 Vantage NXT MATLAB 会话中重跑 `test_all64_high_power_p1.m` 补齐；
+  - **未运行 MATLAB Code Analyzer（`checkcode`）、VSX、hardware/Simulator 加载与实物发射**：无真实负载电压、声压、温升或固化验证结论，探头厂家额定与安全边界仍为 `unknown`。
