@@ -1,0 +1,318 @@
+# 2026-11-23：独立仿真精简留存
+
+- 后续仿真按 `independent_simulation/AGENTS.md` 归档关键图表、可重绘数值、核验结果及小型复算输入。整批分析与回读核验后清理临时全场。新增 CUDA 原始 HDF5 默认受 Git 忽略规则保护。
+- 已从本机 24 个历史全场提取并回读核对绘图切片及轴线，归档于 `independent_simulation/results/archived_slices_2026-11-23/`。当前版本移除 60 个原始大文件路径，保留原有报告、图表、核验记录与小型复算输入。全域回读及新增截面须重新求解。现有 MATLAB 和 Python 入口尚未接入自动清理。
+
+# 2026-11-20：原始驱动纯照射离线版本
+
+- 用户要求原始成像脚本为基准、完全无成像事件的单独照射版本。`verasonics/curing_mode/SetUpP9_4TSICE_TXOnly_20mm_35V_offline.m` 保留原厂探头及延时函数、原6 MHz单周期波形和原15次/组、30组时序，64元、20 mm、35 V请求；去掉接收/重建/显示/传输，有限stop，不调用VSX或保存。独立MATLAB R2024b测试1/1通过、静态分析0项；首次缺厂商路径后修复通过。
+- 35 V仅软件上限，其他探头参数及安全功率unknown；未证明最高功率、实物安全、VSX加载、声压或固化。时序和差异见 `verasonics/curing_mode/原版驱动纯照射离线说明_2026-11-20.md`。厂商软件和F盘手册跨电脑可能不可用；测试必须在独立MATLAB进程运行以避免厂商函数基础工作区冲突。
+
+# 2026-11-20：原始驱动20 mm离线对照
+
+- 用户确认基准为 `VantageNXT-2.3.2-p2/XJD/SetUpP9_4TSICE_FlashAngles.m`，要求原版一致，只修改需要之处。副本 `verasonics/curing_mode/SetUpP9_4TSICE_20mm_35V_offline.m` 保留原始对象和15次采集/重建/循环，将焦点设为20 mm、所有TX转向设为0、增加TPC(1).hv=35；强制simulateMode=1、禁用VSX、改输出名以防覆盖。副本15次均聚焦同一点，不再实现原角度复合成像；不是经VSX验证的驱动或硬件安全版。
+- 与原脚本逐行diff，仅上述变化；MATLAB静态检查与原脚本结果相同（9条提示、1条不可达警告），未运行副本、VSX或硬件；不能估计目标MPa。原文件SHA256为 F6486733742E376D5F3F8FBE848683789EF3E2F948123523E0E7EF8BCD3A3892，原厂软件与手册路径跨电脑可能不可用。
+
+# 2026-11-20：撤回独立候选
+
+- 用户要求与原版驱动一致，仅修改所需部分。先前擅自新增的35 V离线候选及其测试、报告已撤回；未改动既有驱动。原工作成像脚本与已有 `verasonics/curing_mode/SetUpICE_Curing_All64.m` 在发射、接收与时序上不同，用户后来确认原成像脚本为基准，见上节。原脚本及厂商软件在忽略目录，可能未跨电脑同步。
+- 35 V为原软件限制，不是已验证的探头安全额定；探头burst、占空比、温度限值及声压unknown。先前候选的1/1测试、纯照射8/8回归仅为历史离线结果，未执行VSX或硬件。四手册F盘路径及MATLAB等本机依赖跨电脑可能不可用。
+
+# 2026-11-20：完成七角度偏转聚焦与焦区范围对照
+
+- 已完成全64元、固定20 mm直线距离、52 μm的0/±10/±20/±30°七组单发声场、统一焦区分析及原始输出回读。本轮报告 `independent_simulation/docs/steered_focus_results_2026-11-19.md`；完整表图在 `independent_simulation/results/steered_focus_2026-11-19/common_y6p24/analysis/`。没有活动求解器需要继续等待。
+- +30°原始输出包含`t_index=Nt=5925`及完整后处理/总耗时属性，有限值及RMS检查通过；新增 `independent_simulation/curing_steered_focus_recover_20261120.m`，先与既有+20°峰压/Qp/末帧/坐标逐项相等，再恢复+30°MAT，不重复传播，原stage快照与恢复证据保留。原GPU流式日志末尾不完整，恢复依据为HDF5完成属性和数值核验，未宣称找回原MATLAB退出码。
+- −30°已通过 `independent_simulation/run_R2024b.ps1 -Task steered-focus -Angles -30` 完成，MATLAB退出码0。七组峰压/Qp/末帧与原始CUDA输出逐项数值一致，网格、时间、介质、PML、9275点源支撑及二进制哈希一致；正负10/20/30°镜像相对L2约0.00359%/0.00400%/0.00397%。13项Python测试、8项既有BLI回归和实际Windows验证入口通过。
+- Windows入口新增安全 `-RunTag rerun_20261120`，把复现输出放入独立子目录，解决另一台电脑拉取已提交日志后旧目录防覆盖的问题；默认路径与防覆盖保持。目录隔离/输入验证已通过实际MATLAB入口，Python13项测试通过。相关新增脚本及证据均在 `independent_simulation/`。
+- 首要范围指标：0/±10/±20/±30°名义目标截面−6 dB面积约1.793/1.825/1.879/1.941 mm²，u宽约0.733/0.742/0.769/0.817 mm，y宽约3.029/3.018/2.989/2.937 mm。±30°目标声压保留约92.81%；共同0°−3 dB阈值截面积由0.8658降至0.7505 mm²，不能将归一化面积增大当作更强有效覆盖。
+- ±30°相对本组峰的−6 dB纵向穿峰宽约23.986 mm，−3 dB约10.080 mm，共同0°−6 dB阈值约17.513 mm；主要需区分焦前连通与阈值口径。七组范围/截面/剖面未检出截断，但未标定、无真实俯仰透镜、有限域及单档网格限制不变，不证明固化、临床安全或数值收敛。
+- 三维MAT和HDF5仅本机，小型输入/代码/日志/表图随Git同步。另一台电脑需要复制大场或以新RunTag重算；MATLAB/k-Wave/CUDA与四手册本机路径可能不可用。以下11月19日段落为阶段历史，不代表最新完成数。
+
+# 2026-11-19：用户授权运行偏转聚焦，焦区范围优先（执行中）
+
+- 用户明确要求运行仿真，替代此前暂停传播约定，仅限本轮离线研究；首要指标改为焦区范围。保持全64元、中心至目标直线距离20 mm、0/±10/±20/±30°平面内偏转，52 μm网格；无VSX或硬件操作。
+- 实施计划：`independent_simulation/docs/plans/2026-11-19-steered-focus-simulation.md`，本轮报告：`independent_simulation/docs/steered_focus_results_2026-11-19.md`。输入/运行入口 `independent_simulation/curing_steered_focus_gpu_20261119.m`，Python分析入口 `independent_simulation/analyze_steered_focus_20261119.py`，独立原始输出回读 `independent_simulation/verify_steered_focus_20261119.py`。
+- 本机为MATLAB R2024b Update2、RTX4070 Laptop8GB、物理RAM约16GB；CUDA二进制本机路径`H:/HDSP/tools/kwave_unified_1p4p2`，SHA256与旧结果一致（806f20c2…）。MATLAB初始许可错误5201，用户手动启动后batch测试恢复；未关闭用户会话或重装许可。依赖不保证跨电脑可用。
+- 首次共同域31.2×10.4×31.2 mm的0°尝试CUDA内存不足，无有效场；失败现场保存在 `independent_simulation/results/steered_focus_2026-11-19/angle_p00_dx52_gpu_io/`，不能解释为结果。重试共同域31.2×6.24×31.2 mm、物理600×120×600格点、外部PML20格，输出 `independent_simulation/results/steered_focus_2026-11-19/common_y6p24/`。当前0°、±10°、±20°完成、原始输出回读一致，+30°运行中，后续−30°排队；以各组stage.json和最终field.mat为准。用户已确认完整七角度继续采用52 μm（每组实测约12分钟）。
+- 新增输入7角几何/延时/镜像/元数据及5个无效元数据测试实际通过；BLI回归8/8、Python13项解析焦区测试通过。压力−6/−3 dB相对本组局部峰的六邻域连通区及穿峰宽度、目标法向截面面积为指标，另给0°峰压固定阈值下的范围。0/±10/±20°的−6 dB目标截面约1.793/1.825/1.879 mm²，当前均未触边；±20°目标声压保留约96.30%，固定0°阈值截面约1.815 mm²。±10/±20°全场镜像相对L2约0.00359%/0.00400%，新旧0°轴线z≥2 mm相对L2约0.0302%；五组网格/时间/介质/PML/源支撑及二进制哈希一致。不能据此证明三维域或网格收敛。±30°仍未完成，不能推断实测固化或安全。
+- 原始大场/HDF5仅本机，新增忽略规则；本轮开发分支 `codex/steered-focus-20261119`。原有三份文献修改和SVG状态保留。完成后需更新本节、CHANGELOG、正式报告并提交推送。
+
+# 2026-11-19：新增偏转聚焦研究方向
+
+- 用户希望研究左心房向左心耳照射时的偏转聚焦，已确认保持探头中心到目标的直线距离20 mm，而非固定z=20 mm。当前先研究全64元阵列平面内电子偏转，目标定义为`[20 sinθ,0,20 cosθ] mm`；实际解剖角度、探头姿态及目标面入射角仍unknown，不能相互等同。
+- 研究依据与拟议工况、手册章节、代码边界、评价指标见 `independent_simulation/docs/all64_steered_focus_research_2026-11-19.md`。0/±10/±20/±30°为拟议探索角度，尚未实现、运行或验证；原15.6 mm横向域不足以直接承接大角度比较，需覆盖ROI和目标外区域的共同域及新域0°基线核对。
+- 本轮只读查文献、代码和指定手册，未修改驱动或启动传播/硬件。继续遵守暂停传播约定；后续按新任务推进。手册在F盘、本机MATLAB/k-Wave/CUDA和大场数据路径跨电脑可能不可用。
+
+# 2026-11-19：固定20 mm处的全64元声场回读
+
+- 用户选择本轮优先分析已有声场与20 mm处表现；继续暂停传播，无MATLAB、VSX或硬件操作。报告：`independent_simulation/docs/all64_fixed_target20_analysis_2026-11-19.md`；派生表：`independent_simulation/results/focus_depth_2026-11-14/fixed_target20_comparison_20261119.csv`。
+- 四组在同一个20.020 mm轴上格点比较：16/18/20/22 mm几何设定的压力分别为1.983126/2.550647/2.709499/2.600433 assumed Pa。原20 mm设定在该点达到自身峰压95.75%；22 mm设定使峰位更近20 mm，但该固定点压力比原设定低4.0253%。不能把峰位更近直接判为固定目标表现更好；当前保留20 mm设定为比较基线，未改驱动。
+- 本轮只回读Git已有曲线，未回读三维场、提取固定点Qp或检验离轴高值。模型未标定、单档52 μm、源面敏感性及无真实俯仰透镜等限制继续适用。三维场、求解器和手册本机路径跨电脑可能不可用。
+- 开始工作已fetch并确认本地与origin/main一致；原有三份文献修改与SVG缺失保留，不纳入本轮提交。
+
+# 2026-11-19：老师讨论后的研究重点
+
+- 用户与老师讨论后确认，后续聚焦设计仍以距阵面 20 mm 为目标，研究重点放在全 64 元聚焦。目标为设计设定，实际最大声压深度仍需单独报告和验证。
+- 老师讨论认为当前焦区偏宽暂时不是问题，现阶段不以缩窄焦区为首要目标；尚未给出焦宽合格阈值。
+- 连续活动孔径递减的既有 52 μm 模型中，64、48、32、16 元的 z≥2 mm 前向压力峰深度分别为 18.460、16.380、11.232、5.096 mm，趋势是孔径缩小时峰位变浅。此比较中阵元数量与孔径同时改变，不能概括为阵元数量单独决定焦距；奇偶 32 元目标盒峰仍在 18.460 mm，其前向最高峰位于近源侧方。详见 `independent_simulation/docs/curing_four_variant_comparison_2026-11-12.md` 和 `independent_simulation/docs/curing_sparse_comparison_2026-11-13.md`。
+- 全 64 元 16、18、20、22 mm 设定焦深对照已在远端记录，继续工作前查看 `independent_simulation/docs/focus_depth_comparison_2026-11-14.md`。20 mm 的设定值不等于模型或实物的压力最大位置。连续组和焦深对照均为未标定 assumed 声场，不构成实测、固化或临床安全结论；源面和近源峰仍存在网格敏感性。
+- 本轮仅更新交接；未运行仿真、VSX 或硬件。此前多焦和分批照射为待选方向，本次以 64 元 20 mm 聚焦为当前重点。此前暂停传播仿真的用户要求继续适用，后续按用户的新任务执行。
+- 本机工作区存在既有修改及 SVG 缺失记录。2026-11-19 已获取并快进远端 `main`，保留这些既有改动，并同步上述焦深对照。原始场、HDF5、MATLAB/k-Wave/CUDA 依赖和四份 Vantage 手册所在本机路径跨电脑可能不可用。
+
+# 2026-11-14：All64 单焦深度对照
+
+用户要求沿用 All64，仅增加 16、18、22 mm 焦深，并指定只用 52 μm 统一比较。四组前向压力峰深为 15.080、16.536、18.460、19.708 mm；输入、图表、逐组曲线、核验及限制见 `independent_simulation/docs/focus_depth_comparison_2026-11-14.md`。三个新组 CUDA 场与 HDF5 全量回读一致，输入条件已独立核查。16 mm 场的 `meta.target_m` 历史错误和实际目标字段的判读见报告；本机原始场、HDF5 和主动中止的 18 mm/65 μm 中间文件不随 Git 同步。模拟输入不是硬件序列，材料和压力未标定，MATLAB/k-Wave/CUDA 本机依赖跨电脑可能不可用。无 VSX 或硬件操作。
+
+# 2026-11-14：线阵声场建模方法文献对照
+
+- 用户将多焦点同时照射、同焦点分批照射暂列待选，要求先从原始数据比较现有声压分布。完成 `independent_simulation/docs/pressure_raw_data_comparison_2026-11-14.md`：下载并核对 UCL Wang 2012 公开水听器HDF5（本机 `independent_simulation/results/pressure_comparison_local_20261114/`，未纳入Git），提取声压面和曲线，与既有52 μm六组对照；脚本和派生表图 `independent_simulation/results/pressure_evidence_20261114/` 随Git同步。实验YZ的扫描Z原点距探头未知，只能峰对齐做形态参考，不能用来认定20 mm焦深或实物验证。无新传播仿真。
+
+- 用户要求论文原图直接放入报告、围绕图解释硬件与算法、最后对比结论。图文版 `independent_simulation/docs/linear_array_paper_figures_comparison_2026-11-14.md` 附本项目图和 Kashani 2022 图13、Chen 2022 图5、Williams 2023 图4、Marhenke 2019 图8，图像在同目录 `literature_figures_2026-11-14/`；四张图片已人工查看核对，来源及图号随报告保存。其他论文原图未取得，报告明确列出；未运行仿真。
+
+- 已安全拉取远端 `main`，原有未跟踪文件保留；未重启仿真。报告 `independent_simulation/docs/linear_array_model_methods_comparison_2026-11-14.md` 对照本项目 BLI/k-Wave 与 Kashani 2022（k-Wave+COMSOL）、Kashani 2023（k-Wave）、Chen 2022（MUST+水听器）、Williams 2023（实测源全息与传播）、Karunakaran 2013（Field II与单元合成）的源、介质、验证与原图。文献不直接验证本探头近场或绝对声压；新增2023年论文至参考文献集。
+
+# 2026-11-13：暂停仿真并转入文献研究
+
+- 参考文献统一索引在 `independent_simulation/docs/curing_references_2026-11-13.md`，可导入的12条BibTeX在同目录 `curing_references_2026-11-13.bib`；包含当日三个报告中的论文。文献条目和链接随Git同步，论文PDF本体不在仓库；部分多作者条目简写为 `and others`。无新增仿真。
+
+- 应用户要求，将已有结果按问题、项目数据、论文图和数据、可比边界重新整理为 `independent_simulation/docs/curing_literature_comparison_2026-11-13.md`，包含已有声场图、文献原图及按目标盒峰深绘制的图；后续文献核验延续这种图表对照格式。此次不重跑传播。单阵元BLI 75°诊断实际为谱幅值差，不是复谱误差，已更正相关README；数值和原始结果未改。
+
+- 用户明确要求停止仿真，转查已有科研结论；继续研究前不得自动重启传播计算，除非用户另行要求。本轮只查文献与现有结果；经进程列表核对无正在运行的MATLAB/CUDA求解器。
+- 文献与既有声场对照见 `independent_simulation/docs/curing_acoustic_literature_2026-11-13.md`。文献支持几何焦点与声压峰偏移、稀疏阵列可保留窄主瓣但产生目标外高值；不支持笼统声称孔径越大所有目标外声压越低，或阵元越多焦点必然越远。奇偶32的18.46 mm是目标盒内峰，其全前向最高峰在近源侧方。
+- 用户已更正此前“2 mm”为口误，实际关注设定20 mm后实际焦点距离是否达到20 mm，不是2 mm目标或允许偏差。现有全64和奇偶32在目标盒内均18.46 mm，支持孔径分布和对称性重要，不证明阵元数单独决定；奇偶组全前向最高峰在近源侧方，不能混用。
+- 用户要求查相近的一维线阵点聚焦和近场文献，见 `independent_simulation/docs/linear_array_nearfield_literature_2026-11-13.md`。64元约6 MHz水听器15 mm聚焦研究、16元线阵20 mm研究和医疗线阵距表面4 mm实测均不是本探头或本奇偶阵列的直接验证。
+
+# 2026-11-13：奇偶32元可比实验组
+
+- 奇数/偶数物理排名分别1:2:63、2:2:64；用纯照射构建器新导出，不是旧四入口。均为32元、孔径8.17 mm、中心−0.065/+0.065 mm，目标仍固定[0,0,20] mm。实际TX延时、波形和全64活动阵元逐项一致；无VSX或硬件。奇偶两组各65/52 μm完整场已运行，运行与结果见 `independent_simulation/docs/curing_sparse_comparison_2026-11-13.md`。
+- 52 μm目标点（z=20.020 mm）奇偶组压力均1.35475 assumed Pa，约全64的一半，与中央连续32的1.36511相近；目标盒峰横向宽0.7155 mm而连续32边界剖面1.2138 mm。奇偶组目标盒外z≥2 mm峰约1.809 assumed Pa，位于x≈∓6.344、z=2.028 mm，处于浅层首层；源面Qp峰65→52 μm变化+8.59%，不能当作收敛的实际泄漏。宽角和域外声场尚未知。
+- MATLAB相关测试8/8通过；Sol独立核对四个新增HDF5→MAT全量场、导出TX及事件，奇偶镜像全域相对L2约2e−5。比较使用等每元假设，不是等实际总功率；未标定Qp不是实测能量/温升，模型无真实俯仰透镜。远端之外的本机依赖仍需另一台电脑重新部署。
+- 用户要求大型原始数据可留本机：本轮新增奇偶四个三维场MAT和对应CUDA输入输出HDF5未纳入Git，另一台电脑需从本机复制或重新运行。驱动导出、分析表、图、日志及独立回读脚本和核验表可随Git同步。
+
+# 2026-11-12：四版纯照射离线声场比较
+
+- 用户明确要求在保留既有数值限制的前提下补算48/32元；这改变了此前暂缓扩展的执行顺序。四版各65/52 μm完整场现已齐备，统一图与指标见 `independent_simulation/docs/curing_four_variant_comparison_2026-11-12.md`。旧11月11日交接中48/32未算的状态是历史记录。
+- 52 μm的前向峰深度64/48/32/16元依次为18.460/16.380/11.232/5.096 mm；20.020 mm目标点压力相对64元依次为100/75.15/50.38/25.19%，Qp依次为100/56.77/25.40/6.37%。32/16目标盒峰落浅侧边界、轴向−6 dB交点截断。源面Qp 65→52 μm原生峰变化依次+8.97/+3.04/−1.51/−6.10%，64/16敏感性尚未消除。
+- 本轮MATLAB测试16/16通过；Sol独立全量核对8个CUDA HDF5→MAT场、选元延时及汇总指标。第一次48元65 μm MATLAB调用失败、原因未知，直接CUDA和正式重跑一致；诊断现场只留本机。求解器和依赖在Git忽略目录，另一台电脑需重装；结果是单发、假设源、无真实俯仰透镜及未标定，不证明实际功率、温升、固化或安全。
+- 用户明确停止使用 codex-dsh、dsh-baton 和 DeepSeek Harness，后续由 Codex 自行开发；此前来源仍如实保留。
+
+# 2026-11-11：纯照射离线比较后续记录
+
+- All64/Center16 的65/52 μm 完整场与四版实际 MAT 核验已完成；Center48/Center32 的正式传播仍受 All64 近源原生峰网格敏感性阻断。结果及限制以 `independent_simulation/docs/gpu_deployment_2026-11-11.md` 和 `independent_simulation/docs/curing_field_2026-11-10/README.md` 为准。
+- All64 浅域32.5→26 μm：源面 Qp 原生峰 +5.3768%，0<z<0.26 mm 峰 +7.3655%，均超过预先采用的5%内部阈值；130 μm共同点最大值 +0.61779%，6.5 μm样条插值峰 +3.3054%。后两者不替代原生峰、不证明收敛。后续需针对近源表示及网格采样进行有依据的独立核验，不能把浅域结果充作完整焦区计算，也不能代以历史偶数32阵元。
+- MATLAB R2024a U9 + 本机项目内 k-Wave 1.4.1 与社区 CUDA 二进制实际可用；依赖目录 Git 忽略，跨电脑须重新部署。DeepSeek 编写三阵元验证由 Terra 实际运行：测试8/8通过，CPU/GPU时序相对 L2约1.12e-6；对应脚本和 `independent_simulation/results/curing_gpu_validation_20261111/run_20261111_220328/` 仅是合成模型验证。
+- 一次中断的26 μm输入和不完整输出保留在本机 `bli_gpu_shallow/all64_dx26_narrow_gpu_io_interrupted_20261111/`，不属于有效计算结果。未操作 VSX 或硬件。所有声学值未标定，Qp 不等于实测能量或热量。
+
+# ICE 双功能探头：驱动核验与实验准备交接
+
+## 2026-11-14 三组声场峰值标注
+
+按用户要求为双焦/四焦、连续递减及奇偶三组图标注设定目标、目标 ROI 内峰值和 z≥2 mm 前向最大值，区别边界峰与独立焦点。图、坐标表和孔径分析见 [标注报告](independent_simulation/docs/curing_peak_annotation_2026-11-14.md)。多焦图读取本机三维场，递减与奇偶图使用既有 PNG 与三维指标表，历史大场本机缺失。多焦原始 MAT 在本机但不随 Git 同步；重绘脚本依赖 Python 及相关库，跨电脑可能不可用。无硬件实测、新传播或固化验证。
+
+## 2026-11-14 双焦与四焦仿真完成
+
+MATLAB 许可恢复后完成 64 元单焦、双焦和四焦各 65/52 μm 六组三维单发场，同源模型与求解器；图表、输入假设、逐组到时检查、六组 HDF5 逐元素回读和网格剖面见 [对照报告](independent_simulation/docs/curing_multifocus_comparison_2026-11-14.md)。焦点为 assumed 的局部 6 mm 线段与 20 mm 深度，未测量患者或探头到目标距离；无实际固化及硬件运行。原始全场 MAT/HDF5 本机保留，跨电脑需复制或重算；CUDA 路径与 MATLAB/k-Wave 安装均可能不可用。下方同日草稿记录为计算前状态。
+
+## 2026-11-11 GPU 部署与首批两版三维传播
+
+按用户要求继续解决环境问题：在本机项目依赖目录部署社区 kspacefirstorder-unified v1.4.2 Windows CUDA 二进制及运行库，并核对发布 SHA-256；MATLAB 仍为 R2024a Update 9，未安装 Parallel Computing Toolbox，但 `kspaceFirstOrder3DG` 可调用独立 GPU 求解器。RTX 5060 Ti 已实际完成小网格、单元 BLI 的 CPU/GPU 时序与 Qp 对照；具体版本、命令及数值见 [GPU 环境和验证](independent_simulation/docs/gpu_deployment_2026-11-11.md)。二进制依赖在 Git 忽略目录，跨电脑需按脚本重装。
+
+All64、Center16 已各完成 65/52 μm 全域 GPU 传播，并生成原始场、统一色标切片、剖面和指标，位于 `independent_simulation/results/curing_field_2026-11-10/bli_gpu_full/`；原始大型 MAT 和 CUDA HDF5 使用 Git LFS。All64 目标区两档相近，但 z=0 源面 Qp 原生峰相差8.97%；Center16 源面相差6.10%，虽然其 0–2 mm 总层峰变化较小。源支撑实际只在z=0，源面不可忽略，分层与模型限制见 `bli_gpu_full/shallow_audit_20261111/`。Center16 目标盒内峰位于盒浅边界，其轴向−6 dB宽度无法完整测得；不能称其目标处已实现独立焦点。不能因共同格点L2小而宣布所有区域收敛。
+
+补充：两版52 μm短域与完整域浅层已验证一致；短域第三档43.333 μm已完成，All64 52→43.333 μm源面Qp峰变化−9.79%；其43.333→32.5 μm仍变化+5.49%，紧邻源面的子区变化+7.02%。Center16 52→43.333 μm源面变化+0.98%、邻近子区+7.21%，43.333→32.5 μm分别变化+1.53%/+4.41%。All64 32.5 μm缩窄横向域与原宽域在浅层Qp分区的L2差均低于0.001%，26 μm窄域结果见本文最上方续算记录。不得把短域当作20 mm目标区完整计算。
+
+2026-11-11续跑：上次中断留下的26 μm输入及96字节不完整输出已保存在 `independent_simulation/results/curing_field_2026-11-10/bli_gpu_shallow/all64_dx26_narrow_gpu_io_interrupted_20261111/`，仅为本机失败现场，未将其作为结果或纳入Git；新算例使用原目录重新运行并已完成。
+
+另一台电脑需安装并启用 Git LFS，拉取后核对大文件已下载而非只有指针；可执行 `git lfs pull`。独立 CUDA 文件和 k-Wave MATLAB 依赖目录均受忽略规则保护，不会随 Git 自动同步，部署方式见 GPU 环境报告。
+
+## 2026-11-10 纯照射四版离线核验和声场方法检查
+
+R2024a Update 9 本次重新导出 All64、Center48、Center32、Center16，两个 MAT 回读分别 461/461 和 204/204 检查通过；本次另运行 7/7 纯照射测试、40/40 相关回归。物理+x排名为 1–64、9–56、17–48、25–40，孔径为 8.30、6.22、4.14、2.06 mm。原 R2024a 导出因 `range` 未定义失败后，已以等价 `max-min` 修复并重跑。实际输入、结果及限制见[核验报告](independent_simulation/docs/curing_field_2026-11-10/README.md)；历史 66/66 不是本次结果。
+
+统一假设声场比较尚未完成：已实际检验两档网格的面积重叠源、单阵元 BLI 源表示及单阵元传播；五个共同点的最大峰值差 4.716%、Qp 差 2.143%，不能当作全阵列全域收敛。两档时域记录见 `independent_simulation/results/curing_field_2026-11-10/bli_propagation_probe/`。完整传播入口暂时阻断；下一步验证全阵列带限源，再比较 64/16，达标后扩展 48/32。无真实俯仰透镜；`Qp` 不是实测声能或热量。
+
+已运行 `independent_simulation/curing_qp_rms_probe_20261110.m`：小域两个记录起点的 k-Wave 全域 `p_rms` 与时域平方积分、网格索引一致。正式 65/52 μm 物理网格的 16 步面积源、全域 RMS 资源探针约 44.22/87.54 秒；不足以确认 BLI 全算例的耗时或内存。修订后的声场辅助函数测试 21/21 通过。
+
+DeepSeek 的 `independent_simulation/+iceind/curing_bli_prepare.m` 首轮因滤波前沿起点断言错误导致 5/6 小测试失败；修复后 7/7 小测试和逐版读取四个实际 MAT 的 1/1 测试通过，Sol 已独立复核。完整阵列的正式域资源探针和传播结果以 `independent_simulation/results/curing_field_2026-11-10/` 中实际文件为准；不要把小域测试称为收敛。
+
+`curing_bli_resource_probe_20261110` 对 All64 和 Center16 的 65/52 μm 正式域 16 步检查均已完成，求解约 42–87 秒；不代表完整传播已完成。`curing_bli_compare_grids_20261110.m` 在合成场上验证了共同格点与分区 L2 计算，真实两档全场尚未产生。
+
+本机 MATLAB、k-Wave 和手册状态见[环境记录](independent_simulation/docs/curing_validation_environment_2026-11-10.md)：k-Wave 和厂商软件在本机忽略目录，换电脑须重新准备；指定手册目录不可用，随包手册部分为不同修订版。所有工作离线进行，未运行 VSX 或硬件。
+
+## 2026-11-07 标准版公开参数与高输出研究
+
+按用户确认的 TINGSN Sonic Eyes 10 标准版检索公开资料。监管审评概述确认相控阵压电陶瓷及头端温度传感器；标准版产品推介报告64阵元和4.5–9.5 MHz成像多频切换，见[公开参数与证据](docs/verasonics/sonic_eyes_10_public_parameters_2026-11-07.md)。0.13 mm中心距、0.11 mm宽度、50 Ω及35 V仍仅为原软件定义或限制，非实物标定或长脉冲厂家额定；4.5–9.5 MHz多频切换不等于探头−6 dB带宽。本次未找到本型号公开的允许电压、burst/duty或热额定，无法据此确定更强照射的可用范围。后续优先获取对应厂家资料、确认温度接口和系统选件，并对实际输出/温度/固化结果分别验证；本次未修改驱动或运行硬件。
+
+## 2026-11-07 用户确认探头型号
+
+用户结合实物手柄及已查产品外形，确认本项目探头按 **TINGSN Sonic Eyes 10 标准版**开展研究。用户提供照片可见 TINGSN、Sonic Eyes 和 10F；照片该面未显示完整商品型号，型号依据为用户确认而非读取完整标签。此前 Eco 候选图片的型号未能独立核实，不能作为 Eco 与标准版外观差异已证实的依据。型号确认不代表阵元几何、电气参数或额定条件已由厂家标定；这些仍沿用源码或 unknown。纯照射代码的 `cfg.identity.exact_model` 当前仍为 `unknown`，本轮仅记录用户确认，未修改驱动、生成结果或实际硬件配置。
+
+## 2026-11-07 纯照射线程：原版对照与探头定义
+
+本线程范围限定为纯照射探头驱动开发与研究。已找到本机 `VantageNXT-2.3.2-p2/` 的原成像 SetUp、原 MAT、`computeTrans.m` 和 `computeTXDelays.m`，四项 SHA-256 与 2026-11-03 记录一致；该软件包不随 Git 同步，跨电脑可能不可用。原版与四个纯照射候选的发射、事件、孔径及源码参数见[对照记录](docs/verasonics/curing_original_comparison_2026-11-07.md)。原代码的连接映射注释与执行语句不同，应以 `ConnectorES=1:64` 执行值描述，实物接线仍 unknown。
+
+指定手册目录在当前电脑不可访问；随包产品规格书 D00108 Rev.L 与指定版历史哈希一致，随包序列手册为 D00163 Rev.L，而指定版为 Rev.K。本次为只读核验与文档整理，未运行 VSX、MATLAB 回归或硬件；纯照射参数仍 assumed，实物额定与输出 unknown。
+
+## 2026-11-03 当前优先：单独验证探头固化能力的纯照射最小驱动
+
+用户要求先单独验证探头固化能力，建立只有固化/照射功能的最小驱动，按全用到部分调用导出几版。现新增 `verasonics/curing_mode/+icec` 和四入口 `SetUpICE_Curing_All64 / Center48 / Center32 / Center16`，物理+x排名分别1:64、9:56、17:48、25:40。核心逻辑共用，其他照射参数一致；子集是居中连续选元，数量和孔径同时改变。
+
+MAT序列不含Receive/PData/Recon/Process/UI或接收/显示缓冲区，只有一项照射TW及必要发射/TPC/有限事件；没有DMA，不安排成像恢复或结束切回成像档位，仍保留assumed充电等待和stop。复用原探头定义、既有聚焦延时、事件及限值后端；两用模块默认恢复行为不变。
+
+本轮66/66相关MATLAB测试通过，四版已在 `results/curing_only_2026-11-03/drivers` 导出。入口不调用VSX/硬件；6 MHz、20周期、300脉冲等仍是沿用的assumed离线配置，不是已验证固化或上机推荐。见[运行说明及手册边界](verasonics/curing_mode/README.md)、[四版参数表](results/curing_only_2026-11-03/variant_summary.csv)、`results/curing_only_2026-11-03`下实际验证记录。以下为较早工作快照，两用方案保留，当前实验优先纯照射。
+
+## 2026-11-01 当前方案：全64成像、照射阵元可选、时间复用
+
+用户明确将“奇偶互斥分区”调整为“原全64元成像TX/RX，照射从同一阵列中选取部分或全部阵元”。驱动已支持新默认layout `full64_imaging_selected_exposure` 和 `cfg.partition.exposure_ranks`（物理+x排名）；旧奇偶/左右分区仅为显式对照。默认偶数32元照射是沿用候选，不是已优化或可上机的额定设置。新默认产物在 `results/verasonics_full64_selected_exposure`，旧结果保留。
+
+研究准则：在达到预定义固化质量和处理时间要求后，寻找最低实测有效功率并记录总声能/电能；在厂家允许工作范围内建立可复现的器件能力包络，计入电压、burst、PRF/duty、累计负荷、温升和成像恢复。不是击穿阈值以下任意提升，也不是破坏性极限试验。
+
+本轮58/58 MATLAB回归通过，23文件Code Analyzer 0消息，四个厂商基线文件SHA256未变；64/16、64/32、64/64候选均保留原成像TX、450条Receive及PData。名义负荷按共享阵元累计两类脉冲时间，并计入跨用途相邻发射间隔的局部比例检查。报告/运行记录见 [本轮方案](docs/verasonics/shared_aperture_2026-11-01.md)、`results/shared_aperture_2026-11-01`。未运行VSX/硬件；恢复时间仍assumed，真实固化功率与器件额定值unknown。以下2026-10-29及更早段落为历史快照，不代表新默认分配。
+
+## 2026-10-29 本线程后续更新：已恢复原成像定义
+
+用户已明确授权以原工作驱动为母版改写现有自写版。现已恢复原虚拟顶点发散波、实际角度、SectorFT/网格/接收窗口、Media/显示和缺省电压语义，保留奇偶分区与独立照射，新增仅imaging_only的全64对照。入口不变；新产物在 `results/verasonics_original_sector`，旧导出保留。
+
+实际验证：MATLAB 48/48测试通过，21文件Code Analyzer 0消息；全64对照450条Receive和PData与原MAT一致，四个厂商基线文件SHA256未变。未运行VSX或硬件。各保留差异的理由、参数来源、手册页码和限制见 [本次修改报告](docs/verasonics/original_imaging_restoration_2026-10-29.md)，测试证据见 `results/original_imaging_restoration_2026-10-29`。
+
+**下文第1–10节保留修改前的核验交接快照，其中“尚未恢复/尚未修改”和旧自写参数描述不再代表当前代码；研究边界、未知额定数据及硬件未验证状态继续适用。**
+
+更新日期：2026-10-29（Asia/Shanghai）。工作目录：H:/print_transducer。
+
+**当前重点已转为原驱动核验与器件实验准备。用户明确认为成像模块不应有大的改动。原驱动已能正常驱动探头成像，应作为后续修改基准；自写版改变了多项成像设置，尚未恢复。本轮只更新交接文档，不修改驱动。**
+
+## 1. 用户最新确认与研究边界
+
+- 合作方体外 FUS 打印是用户确认已经实施并成功的实验。不要再写成尚未开始的设想。
+- 用户研究的是 ICE 器件在该应用中能否成功使用，是另一个实验角度/升级途径；ICE 双功能路线继续研究。
+- 材料配方、材料递送、球囊和具体手术操作不属于用户研究范围，不重新安排为用户的工作包。合作方体外 FUS 不等于用户已决定采用的固化声源。
+- 工作重心可以从仿真转移到器件实验准备，首先核验驱动。既往仿真用于解释和辅助设计，不要求先解决全部数值问题才开展所有器件验证。
+- 驱动核验/修改的两个依据：①现有 H:/print_transducer/VantageNXT-2.3.2-p2 及已工作的原成像程序；②本支探头型号及规定的硬件限制。指定四份手册仍是系统侧基础。
+- 探头目前仅猜测为 TINGSN Sonic Eyes 10 标准版，尚未确认，不能借用 10 Eco/10 Pro 的额定值。
+- 用户本轮明确先核验、暂不修改驱动，随后确认成像模块应尽量保持原样。目前尚未实施恢复或功能修改。接手按用户后续任务执行，本交接不构成硬件操作授权。
+
+## 2. 已确定的后续修改原则
+
+**保留原驱动已经验证能工作的成像链路，在其基础上增加照射功能。**
+
+1. 沿用原发散波方式、实际发射角度、扇形重建区域、网格、接收窗口、TGC、显示处理和启动电压逻辑。当前平面波、窄矩形视野、粗网格和显式 5 V 等变化，应逐项撤回或说明保留依据；它们不是增加照射所必需的。
+2. 当前方案仍是 64 阵元线阵、奇偶交替分工：软件约定按物理 x 排序，奇数 32 元成像 TX/RX，偶数 32 元照射 TX。阵元分区单独作为设计变量，保留原全 64 成像为对照，不将分区与成像方式、角度及重建参数变化混在一起验证。
+3. 照射独立增加 TW/TX、聚焦延时、有限事件和照射后的恢复时序。成像与照射时间交替，不是在照射期间同时成像接收。
+4. 重点验证分区对成像/定位的影响，以及照射对后续接收和成像的影响、恢复需要多久。估计等待时间由实测逐项替换，不能写成已经测得。
+
+以上是已讨论的方向，不是已完成的代码变更。
+
+## 3. 接手先读
+
+| 文件 | 用途 |
+|---|---|
+| [AGENTS.md](H:/print_transducer/AGENTS.md) | 仓库规则、四手册、验证和变更记录要求 |
+| [本轮驱动核验](H:/print_transducer/docs/verasonics/driver_audit_2026-10-29.md) | 11 项发现、依据、检查范围及缺失资料 |
+| [本轮验证状态](H:/print_transducer/results/driver_audit_2026-10-29/verification_status.json) | 实际完成项与未完成项 |
+| [原工作程序](H:/print_transducer/VantageNXT-2.3.2-p2/XJD/SetUpP9_4TSICE_FlashAngles.m) | 成像工作基准；末尾调用 VSX，不为查看配置直接运行 |
+| [原保存 MAT](H:/print_transducer/VantageNXT-2.3.2-p2/MatFiles/SetUpP9_4TSICE_FlashAngles.mat) | 实际对象值的只读对照 |
+| [computeTrans.m](H:/print_transducer/VantageNXT-2.3.2-p2/Utilities/computeTrans.m) | P9-4ULts 分支约 1854 行起的几何和连接器执行定义 |
+| [自写入口](H:/print_transducer/verasonics/dual_mode/SetUpICE_ImagingCuring.m) | 当前离线构建/导出，不调用 VSX |
+| [default_config.m](H:/print_transducer/verasonics/dual_mode/+icevs/default_config.m) / [build.m](H:/print_transducer/verasonics/dual_mode/+icevs/build.m) / [compile_events.m](H:/print_transducer/verasonics/dual_mode/+icevs/compile_events.m) | 自写配置、成像构建和事件时序 |
+| [旧交接完整快照](H:/print_transducer/docs/handoffs/handoff_before_2026-10-29.md) | 2026-10-24 以前的仿真、结果及入口；旧优先级已被本文件替代 |
+
+P0 后端开发另参照 [P0 计划](H:/print_transducer/docs/superpowers/plans/2026-09-24-ice-p0-upgrade.md) 和 [升级记录](H:/print_transducer/docs/upgrade_2026-09-24.md)，其中 synthetic 阵列不能替代本支实物。
+
+## 4. 原驱动与自写版的确定差异
+
+已对照源码及保存 MAT。以下是当前状态，不是计划修改后的结果。
+
+| 项目 | 原工作成像程序 | 当前自写版 | 接手注意 |
+|---|---|---|---|
+| 成像 TX/RX | 全 64 元 | 奇数 32 元 | 分区是独立变量，保留全 64 对照 |
+| 发射方式 | 虚拟顶点发散波，负焦距 | 平面波，focus=0 | 不是原样继承 |
+| 15 个发射角度 | 实际 −22.5°～+67.5° | −15°～+15° | 原注释与执行值不一致，MAT 支持执行值；不要写成 ±30°/±45° 或自动纠正 |
+| 重建区域 | SectorFT 扇形 | x=[−6,6] mm 矩形 | 视野改变 |
+| 网格 Δx/Δz | 0.13 / 约 0.11846 mm | 0.25 / 0.5 mm | 按 c=1540 m/s、Trans.frequency=6.5 MHz 换算；现网格较粗 |
+| PData.Size | [810,1087,1] | [191,49,1] | 是重建网格，不是 k-Wave 传播网格 |
+| Receive.endDepth | 432 波长 | 416 波长 | 随新视野重新计算，未保留原接收窗口 |
+| 启动电压 | 原脚本未设 TPC.hv，原 MAT 无 TPC | 显式 5 V | 缺省启动 1.6 V；原实验是否手动调压未知 |
+| 模式/循环 | simulateMode=0；30 帧缓存后 jump 持续循环 | simulateMode=1；有限 30 组后 stop | 构建器目前拒绝 simulate_mode=0 |
+| 成像时序 | 400 μs 组内间隔，20 ms 帧时序 | 保留名义值，插入照射/等待 | 整体不再是原持续成像周期；计划时长是下界 |
+| 照射 | 无独立照射模块 | 偶数 32 元、6 MHz、20 周期 | 新功能，原成像成功不能验证其输出/热负荷 |
+
+仍沿用：64 线阵几何、1:64 通道映射、connType=4、Trans.id=−1、35 V 配置上限、成像波形 [6,.67,2,1]、NS200BW/12 MHz 解调、TGC 控制点、基本 IQ 叠加及 Image.imageDisplay 处理。波形 C=2 是两个半周期，即一个完整周期。
+
+偏离原程序与已证明代码错误/超额定值要分开。用户确认原驱动能正常成像，接受其为工作基准；本线程没有重新进行实物验证。
+
+## 5. 当前参数与硬件依据边界
+
+- 源码几何：pitch 0.13 mm、宽度 0.11 mm、俯仰孔径 2.02 mm、固定俯仰焦距 30 mm、参考频率 6.5 MHz、配置带宽 [4,9] MHz；属于 source-derived/unverified，不是本支探头厂家标定。
+- 奇/偶活动阵元中心距 0.26 mm，边缘空白 0.15 mm，每组孔径跨度 8.17 mm；不要混淆 pitch 与边缘缝隙。
+- 35 V 来自原 SetUp 的 Trans.maxHighVoltage，不是已确认的长脉冲额定值。缺省 1.6 V 与自写 5 V 的比较依据为 D00163 Rev. K/L §12，p96；不证明 5 V 必然超限，也不反推原实验实际电压。
+- 自写照射：6 MHz、20 周期、PRI 1000 μs、每焦点 10 脉冲、30 组。名义包络 3.333333 μs，组内包络占空比 0.333333%，300 次合计 1 ms；不是声能、温升或固化剂量。
+- 初始化/换档各 5 ms、接收恢复 2 ms、充电等待 10 ms 均为 assumed。5 ms 不保证所有换档完成；默认成像/照射同为 Profile 1、5 V，两者之间不换档。
+- Profile 5 安装/许可 unknown；离线可编译不代表本机具备。探头 burst/duty/累计通电时间/额定电压四项限制未核实，温度读取与保护闭环也未建立可验证证据。
+- stop 是冻结，解除冻结可从 startEvent 再运行；一次序列有限不等于跨运行累计暴露受控。
+
+待补：实物完整型号、厂家 IFU/额定表、转接板/UTA 接线和温度接口、本机型号/模块/频率配置/许可、原实验实际运行电压。缺少资料不妨碍只读核验或制定最小改动方案，但不能给出硬件额定合规结论。
+
+## 6. 已完成与未完成
+
+本轮已完成：
+
+- 核对原脚本、原 MAT、computeTrans 分支、自写构建/校验/时序代码；读取指定四手册及随包手册，记录版本和哈希。
+- 三个已保存 MAT 的事件引用、奇偶掩码、发射次数、照射 rcv=0、末尾 stop 检查通过：imaging_only 543 事件/450 采集；exposure_only 393 事件/300 照射；interleaved 933 事件/450 采集/300 照射。
+- 核验阶段 12 个自写 MATLAB 文件和 4 个关键既有文件哈希一致，见 [source_integrity.json](H:/print_transducer/results/driver_audit_2026-10-29/source_integrity.json)。
+- 用户确认保留原成像链路；进一步核对了原实际角度、网格和接收窗口。
+
+未完成，不能宣称通过：
+
+- MATLAB 离线回归及 Code Analyzer 请求约 7 分钟未返回后停止等待，未取得新输出。不是测试已失败，也不是已通过；不要盲目并发启动多个 MATLAB。
+- 2026-10-12 的 43/43 测试、19 文件零静态消息是历史记录，非本轮运行。
+- 未运行 VSX loader、系统自检、硬件、实际波形/声压/温度测量、接收恢复或固化实验。
+- 未恢复原成像配置、未更改运行开关、源模型、额定值或 Verasonics 许可。
+
+证据在 [results/driver_audit_2026-10-29](H:/print_transducer/results/driver_audit_2026-10-29)。[saved_mat_audit.json](H:/print_transducer/results/driver_audit_2026-10-29/saved_mat_audit.json) 是既有产物的本轮只读检查，不是新构建；[manual_manifest.json](H:/print_transducer/results/driver_audit_2026-10-29/manual_manifest.json) 记录手册路径、首页版本与哈希。
+
+## 7. 下一步建议顺序
+
+1. 读本交接及核验记录，按用户后续任务继续核验、制定方案或修改；不直接启动原 SetUp/硬件。
+2. 对照原脚本和 MAT，把原成像保留项、仅因奇偶分区必须改变的项、新增照射项分开。优先恢复非必要成像变化，避免同时改变多个变量。
+3. 若用户后续要求修改，保留原全 64 成像对照，单独组织 32 元分区与照射。不能只取消 simulate_mode=0 的拒绝条件就称硬件版完成。
+4. 完成实际离线对照与适用软件测试；MATLAB 不可用则记录未完成项，不用旧通过数替代。
+5. 硬件依据落实后，按授权验证原成像、分区成像、有限照射输出和成像恢复，记录输出、热负荷及等待时间实测值，不先指定未经额定依据支持的上机参数。
+6. 非琐碎代码修改依 AGENTS.md 更新 CHANGELOG、记录验证和限制。本轮只交接，不提交/推送。
+
+## 8. 仿真与图片证据保留
+
+此前完成过三维 k-Wave、扩大域/PML、32 对 64 元和 65 对 52 μm 网格比较。扩大域发现浅层离轴高压，64 元对照显著改变该分布，网格细化未消除相关现象；源表示是待排查方向，尚未确定全部因果、全域收敛或固化能力。继续源模型仿真不再是默认首要任务。
+
+- [2026-10-24 结果解读](H:/print_transducer/independent_simulation/docs/findings_2026-10-24.md) / [宽域报告](H:/print_transducer/independent_simulation/docs/widegrid_2026-10-24.md)。完成工况不为查看结果重复启动。
+- [含浅层区域的新版三维声压 HTML](H:/print_transducer/independent_simulation/results/kwave_widegrid_2026-10-24/interactive/widefield_pressure_3d.html)。显示含降采样，各位置时间窗最大绝对声压不是同一时刻快照；未标定幅度不等于实物声压。
+- [旧交接快照](H:/print_transducer/docs/handoffs/handoff_before_2026-10-29.md) 保留详细仿真数据及入口。旧文档以仿真/材料/球囊为先的工作排序不再适用。
+
+max_t|p| 是每一点随时间的最大绝对声压；Qp=∫p²dt 是压力平方时间积分代理，不自动等于声能或沉积热。固定主焦区作参考时，浅层可出现正 dB，不能误解为相对全域最大值仍为正。
+
+## 9. 指定硬件手册
+
+目录：F:/xwechat_files/wxid_quwpem6vchzg22_3c29/msg/file/2026-10/。涉及硬件能力、接口、驱动、采集和时序时，先查相关章节，注明版本和页码。资料不可访问时明确报告。
+
+| 手册/版本 | 本次相关依据 |
+|---|---|
+| Product Specification，D00108 Rev. L | §1.4，印刷 p8–9/PDF p9–10：选件、Profile 5、系统检查不能替代探头过热及声输出约束 |
+| Initial Setup Instructions，D00109 Rev. D | §4.5，p9–10：系统自检和日志；本轮未执行 |
+| System User Manual，D00107 Rev. K | §4.4.1–4.4.2，p30：成像供电与扩展发射选件 |
+| Sequence Programming Manual，D00163 Rev. K | §4.3.1–4.3.2，p23–25；§12，p95–98；§13.1，p107、110–111；§16，p121；附录 A107：stop/恢复 |
+
+随包对应版本为 D00108 Rev. L、D00109 Rev. E、D00107 Rev. L、D00163 Rev. L，后面三份不同版，不混用页码。发布说明 D00297 Rev. C 还记录缓冲区对齐、无接收却有 DMA 等问题，详核验记录。选配能力不等于本机已安装/许可，电气输出不能直接当作声压、温升或固化。
+
+## 10. 工作区与本次交接
+
+工作区已有大量修改和未跟踪文件，包括 Vantage 包、自写驱动、独立仿真和结果。不要清理、重置、批量覆盖或把全部 dirty 内容归为本轮改动。原 SetUp 会运行 VSX；自写 SetUp 和 scripts/verify_verasonics_dual_mode.m 默认会覆盖已有导出，查看状态无需执行。
+
+本次仅更新根目录 handoff.md、新增旧交接完整快照及快照说明；没有修改驱动、启动 MATLAB/VSX、操作硬件、修改许可证、提交或推送。未知数据继续标 synthetic/assumed/unknown，声学暴露不写成成功固化或临床安全。
+
+## 2026-11-14 双焦/四焦离线仿真草稿（未完成）
+
+按用户要求，新增 `independent_simulation/curing_multifocus_20261114.m` 和 `independent_simulation/curing_multifocus_gpu_20261114.m` 草稿，复用 All64 原始导出、64 元同幅声源及 65/52 μm 求解设置。两个相邻 32 元分组对应目标 x = ±2 mm，四个相邻 16 元分组对应 x = −3、−1、1、3 mm，y = 0、z = 20 mm；均为示例 assumed，并非患者测量。延时使用统一全局时间参考。目标跨距选为局部 6 mm 以适应现有物理计算域，不能代表覆盖整个左心耳落地区。
+
+尚未运行或验证脚本，也没有仿真结果。当前 MATLAB R2024b 启动报告无法连接 MathWorks 许可服务（错误 5201）；原 R2024a 和原 CUDA 路径本机不可用，脚本暂指向本机 `H:/HDSP/tools/kwave_unified_1p4p2`，另一台电脑可能不可用，版本与哈希尚未核实。需先恢复 MATLAB 许可，检查脚本及波形相位、测例、求解器版本后运行和生成对照图，检查多焦点各 ROI、近场及网格敏感性；原单焦 ROI 诊断不适合直接解释多焦场。参数与声压未标定，不能报告固化结论。当前已有其他线程的修改及删除，未触碰；远端查询因代理连接失败未完成，未提交推送。
+# 2026-11-14 四组轴向声压分图
+
+为解决曲线重合造成的原图难辨，新增 `independent_simulation/plot_pressure_four_groups_20261114.m` 和 `independent_simulation/results/pressure_evidence_20261114/ucl_four_selected_profiles.png`，见 `independent_simulation/docs/pressure_raw_data_comparison_2026-11-14.md`。MATLAB R2024a 仅读取既有数据生成图；All64 与 Odd32 归一化轴线最大差约 3.16e-6，离轴结果不等同。未重新运行仿真；峰值对齐不能用于比较实际聚焦距离。

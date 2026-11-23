@@ -1,0 +1,31 @@
+# Keep reviewable CSV/PNG/JSON snapshots; regenerate large MATLAB arrays locally.
+results/**/*.mat
+results/**/*.fig
+results/**/*.log
+results/validation/sweep_smoke/
+*.log
+*.asv
+slprj/
+.DS_Store
+
+# Machine-specific vendor installation, credentials, caches and temporary files.
+/VantageNXT-2.3.2-p2/
+/output/
+/tmp/
+**/tmp/
+pytest-cache-files-*/
+__pycache__/
+*.pyc
+independent_simulation/results/**/*.mat
+independent_simulation/results/**/*.fig
+independent_simulation/results/**/*.log
+docs/reports/**/backup/
+docs/reports/**/validation/temp-directory-probe-*/
+docs/reports/**/.svg_final.candidate-*/
+/results/driver_audit_2026-10-29/package_Vantage*.txt
+/results/driver_audit_2026-10-29/required_Vantage*.txt
+/results/verification_2026-10-09/systemInfo_*.txt
+independent_simulation/results/**/*_gpu_io*/*.h5
+independent_simulation/results/**/gpu_resource_*/*.h5
+independent_simulation/results/curing_gpu_validation_20261111/**/*.h5
+independent_simulation/results/pressure_comparison_local_20261114/*.h5
