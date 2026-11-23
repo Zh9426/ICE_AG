@@ -1,5 +1,11 @@
 # 更新与升级公告
 
+## 2026-11-23 — 全 64 元高功率发射最小改动驱动（Profile 1）
+
+**已实现。** 基于 `VantageNXT-2.3.2-p2/XJD/SetUpP9_4TSICE_FlashAngles.m` 新增最小改动版 [SetUpP9_4TSICE_All64_HighPower_P1.m](verasonics/curing_mode/SetUpP9_4TSICE_All64_HighPower_P1.m) 与测试 [test_all64_high_power_p1.m](tests/test_all64_high_power_p1.m)。依据 `systemInfo.txt` 实际许可（不含 `Extended Transmit` / `HIFU`）及随包手册（D00108 Rev. L、D00107 Rev. L、D00112 Rev. D、D00297 Rev. C），保持 TPC Profile 1（`<25 cycles`，`sysExtendBL=0`），将波形由 `[6, 0.67, 2, 1]` 增至 `[6, 1.0, 40, 1]`，采用 `PRI = 600 μs`、有限 `500` 发后 `stop`、`20 mm` 单焦点（支持 `P.steerDeg`）、`TPC(1).maxHighVoltage = 35 V` 及 `1.6 V` 安全起步；保留 VSX 加载所需的最小占位对象并禁用 `VSX` 自动运行。详见 [驱动分析与对照报告](docs/verasonics/all64_high_power_driver_2026-11-23.md)。
+
+**已验证与未执行项。** 已核对 `VantageNXT-2.3.2-p2/` 四基线文件 SHA-256 未变及新脚本结构与静态语法审计；指定 F 盘手册目录在本机不可访问。因本机 MATLAB 批处理报 MathWorks 许可错误 5201 未启动成功，MATLAB 单元测试、`computeTWWaveform`、Code Analyzer、VSX 及硬件发射均尚未运行；探头长脉冲安全额定、实测功率/声压、温升与固化效果仍为 `unknown`。
+
 ## 2026-11-23 — 独立仿真精简留存
 
 明确整批分析与回读核验后的归档内容，并忽略新增 CUDA 原始 HDF5 及本机下载的水听器 HDF5。已核对忽略规则覆盖新旧算例路径，结果表、绘图数据和求解日志仍可提交。仿真入口的自动清理待实施。见[独立仿真目录规则](independent_simulation/AGENTS.md#仿真结果留存)。
